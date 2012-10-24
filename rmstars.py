@@ -65,7 +65,7 @@ def run():
         with open(filename,'r') as f:
             stars = get_import_star_lines(f)
             module_names = get_module_names(stars)
-            module_contents = dir_modules(module_names[0:1])
+            module_contents = dir_modules(module_names)
             tests = make_object_tests(module_contents)
             find_module_usage(tests)
     except IOError:
