@@ -61,15 +61,12 @@ def run():
         print "usage: ./cleanup.py <filename>"
         exit()
 
-    try:
-        with open(filename,'r') as f:
-            stars = get_import_star_lines(f)
-            module_names = get_module_names(stars)
-            module_contents = dir_modules(module_names)
-            tests = make_object_tests(module_contents)
-            find_module_usage(tests)
-    except IOError:
-        print "File {f} does not exist".format(f=filename)
+    f = open(filename,'r') as f:
+    stars = get_import_star_lines(f)
+    module_names = get_module_names(stars)
+    module_contents = dir_modules(module_names)
+    tests = make_object_tests(module_contents)
+    find_module_usage(tests)
 
 if __name__=='__main__':
     run()
