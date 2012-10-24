@@ -61,7 +61,7 @@ def run():
         print "usage: ./cleanup.py <filename>"
         exit()
 
-    f = open(filename,'r') as f:
+    f = open(filename,'r')
     stars = get_import_star_lines(f)
     module_names = get_module_names(stars)
     module_contents = dir_modules(module_names)
