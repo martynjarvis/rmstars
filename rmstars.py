@@ -2,6 +2,8 @@
 import sys
 import re
 
+from collections import defaultdict
+
 matches = re.compile("import \*")
 
 filename = ""
@@ -29,19 +31,27 @@ def dir_modules(modules=[]):
         module_contents[module_name] = dir(_temp)
     return module_contents
 
-def find_module_usage(module_contents={}):
+def make_object_tests(module_contents={}):
+    tests = defaultdict(dict)
+    for module_name, contents in module_contents.iteritems():
+        tests[module_name] = dict(zip(contents,
+            [re.compile('[ \(,]{0}[ \(,]'.format(obj)) for obj in contents]))
+    return tests
+
+
+def find_module_usage(module_tests={}):
     print filename
     print "="*len(filename)
     for line_number, line in enumerate(file_lines):
         if line[0]=='#':
+            #skip comments
             continue
-        for module_name, contents in module_contents.iteritems():
-            for obj in contents:
-                o_test = re.compile('[ \(,]{0}[ \(,]'.format(obj))
-                if o_test.search(line):
+        for module_name, tests in module_tests.iteritems():
+            for obj_name, test in tests.iteritems():
+                if test.search(line):
                     line_seg = line[:20] if len(line)>20 else line[:-1]
                     print "{num}: {l}...\t{o} from {m}".format(num=line_number,
-                            l=line_seg, o=obj, m=module_name)
+                            l=line_seg, o=obj_name, m=module_name)
 
 def run():
     global filename
@@ -56,7 +66,8 @@ def run():
             stars = get_import_star_lines(f)
             module_names = get_module_names(stars)
             module_contents = dir_modules(module_names[0:1])
-            find_module_usage(module_contents)
+            tests = make_object_tests(module_contents)
+            find_module_usage(tests)
     except IOError:
         print "File {f} does not exist".format(f=filename)
 
