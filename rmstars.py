@@ -4,6 +4,8 @@ import re
 
 from collections import defaultdict
 
+make_suggestions = True
+
 matches = re.compile("import \*")
 
 filename = ""
@@ -27,8 +29,12 @@ def dir_modules(modules=[]):
     module_contents = {}
     for module in modules:
         module_name  = '.'.join(module)
-        _temp = __import__(module_name, globals(), locals(), [module_name], -1)
-        module_contents[module_name] = dir(_temp)
+        try:
+            _temp = __import__(module_name, globals(), locals(), [module_name], -1)
+        except ImportError:
+            module_contents[module_name] = [None]
+        else:
+            module_contents[module_name] = dir(_temp)
     return module_contents
 
 def make_object_tests(module_contents={}):
@@ -40,8 +46,9 @@ def make_object_tests(module_contents={}):
 
 
 def find_module_usage(module_tests={}):
-    print filename
-    print "="*len(filename)
+    if len(file_lines):
+        print filename
+        print "="*len(filename)
     for line_number, line in enumerate(file_lines):
         if line[0]=='#':
             #skip comments
@@ -53,7 +60,7 @@ def find_module_usage(module_tests={}):
                     print "{num}: {l}...\t{o} from {m}".format(num=line_number,
                             l=line_seg, o=obj_name, m=module_name)
 
-def run():
+def run(make_suggestions):
     global filename
     try:
         filename = sys.argv[1]
@@ -64,9 +71,14 @@ def run():
     f = open(filename,'r')
     stars = get_import_star_lines(f)
     module_names = get_module_names(stars)
-    module_contents = dir_modules(module_names)
-    tests = make_object_tests(module_contents)
-    find_module_usage(tests)
+    if len(module_names):
+        print "For <{fn}> found...".format(fn=filename)
+    for name_grouping in module_names:
+        print "\t{m}".format(m='.'.join(name_grouping))
+    if make_suggestions:
+        module_contents = dir_modules(module_names)
+        tests = make_object_tests(module_contents)
+        find_module_usage(tests)
 
 if __name__=='__main__':
-    run()
+    run(make_suggestions)
